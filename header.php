@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Task Management System</title>
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon.ico">
     <link href="./vendor/jqvmap/css/jqvmap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./vendor/chartist/css/chartist.min.css">
     <link href="./vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
@@ -126,7 +126,7 @@
                     </li>
 
                     <li>
-                        <a href="javascript:void(0)" aria-expanded="false">
+                        <a href="./logout.php" aria-expanded="false">
                             <i class="flaticon-381-exit-1"></i>
                             <span class="nav-text">Logout</span>
                         </a>

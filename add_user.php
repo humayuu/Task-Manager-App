@@ -87,11 +87,10 @@
                                             </label>
                                             <select id="userRole" name="userRole"
                                                 class="form-control form-control-lg default-select" required>
-                                                <option value="">Select a role...</option>
-                                                <option value="admin">Administrator</option>
+                                                <option value="" selected disabled>Select a role...</option>
+                                                <option value="admin">Admin</option>
                                                 <option value="manager">Manager</option>
-                                                <option value="editor">Editor</option>
-                                                <option value="user">Standard User</option>
+                                                <option value="employee">Employee</option>
                                             </select>
                                         </div>
                                         <div class="form-group col-md-6">
@@ -100,10 +99,9 @@
                                             </label>
                                             <select id="status" name="status"
                                                 class="form-control form-control-lg default-select" required>
-                                                <option value="">Select status...</option>
-                                                <option value="active" selected>Active</option>
+                                                <option value="" selected disabled>Select status...</option>
+                                                <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
-                                                <option value="pending">Pending Approval</option>
                                             </select>
                                         </div>
                                     </div>
@@ -125,23 +123,6 @@
                                 </div>
 
                             </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Help Card -->
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <div class="alert alert-info mb-0">
-                            <h5 class="alert-heading">
-                                <i class="fa fa-info-circle mr-2"></i>Important Information
-                            </h5>
-                            <ul class="mb-0 pl-3">
-                                <li>All fields marked with <span class="text-danger">*</span> are required</li>
-                                <li>Password must be at least 8 characters long</li>
-                                <li>A welcome email will be sent to the user's email address</li>
-                                <li>Users can change their password after first login</li>
-                            </ul>
                         </div>
                     </div>
                 </div>

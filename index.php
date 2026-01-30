@@ -1,3 +1,30 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+require './config.php';
+
+// Generate CSRF Token
+if (empty($_SESSION['__csrf'])) {
+    $_SESSION['__csrf'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issSubmitted'])) {
+    //Verify csrf token
+    if (!hash_equals($_SESSION['__csrf'], $_POST['__csrf'])) {
+        $_SESSION['message'] = 'Invalid CSRF token';
+        header("Location: " . basename(__FILE__));
+        exit;
+    }
+
+    $table = 'users_tbl';
+    $email = htmlspecialchars($_POST['email']);
+    $password  = $_POST['password'];
+    $redirect = './dashboard.php';
+
+    $auth->attempt($table, $email, $password, $redirect);
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en" class="h-100">
 
@@ -7,7 +34,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Task Management System</title>
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon.ico">
     <link href="./css/style.css" rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&display=swap"
@@ -22,20 +49,32 @@
                     <div class="authincation-content">
                         <div class="row no-gutters">
                             <div class="col-xl-12">
+                                <?php
+                                if ($auth->getErrors()) {
+                                    foreach ($auth->getErrors() as $error) {
+                                        echo "<div class='alert alert-danger'>$error</div>";
+                                    }
+                                }
+
+
+                                ?>
                                 <div class="auth-form">
                                     <h1 class="text-center mb-4 text-white">Task Management System</h1>
                                     <h4 class="text-center mb-4 text-white">Sign in your account</h4>
-                                    <form action="index.html">
+                                    <form method="post" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                                        <input type="hidden" name="__csrf"
+                                            value="<?= htmlspecialchars($_SESSION['__csrf']) ?>">
                                         <div class="form-group">
                                             <label class="mb-1 text-white"><strong>Email</strong></label>
-                                            <input type="email" class="form-control" value="hello@example.com">
+                                            <input type="email" class="form-control" name="email" autofocus>
                                         </div>
                                         <div class="form-group">
                                             <label class="mb-1 text-white"><strong>Password</strong></label>
-                                            <input type="password" class="form-control" value="Password">
+                                            <input type="password" class="form-control" name="password">
                                         </div>
                                         <div class="text-center">
-                                            <button type="submit" class="btn bg-white mt-5 text-primary btn-block">Sign
+                                            <button type="submit" name="issSubmitted"
+                                                class="btn bg-white mt-5 text-primary btn-block">Sign
                                                 Me
                                                 In</button>
                                         </div>

@@ -1,67 +1,65 @@
 <?php
 
+
 /**
- * Class for user Authentication & Database connection
+ * Class for Database connection & Authentication
  */
 
 class Auth
 {
-    public $conn;
     public $errors = [];
     public $result = [];
+    public $conn;
 
     /**
-     * Function for Database Connection
+     * Function For Database Connection
      */
-    public function __construct($host, $dbName, $username, $password)
+    public function __construct($host, $dbname, $username, $password)
     {
         try {
             $this->conn = new PDO(
-                "mysql:host=$host;dbname=$dbName;charset=utf8mb4",
+                "mysql:host=$host;dbname=$dbname;charset=utf8mb4;",
                 $username,
                 $password,
                 [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
-                ]
-
+                ],
             );
         } catch (PDOException $e) {
-            throw new PDOException("Database connection error " . $e->getMessage());
+            throw new PDOException('Database connection failed ' . $e->getMessage());
         }
     }
 
     /**
-     * Function for Check if the table is exists or not
+     * Function for check if the table is exists or not in database
      */
     protected function tableExists($table)
     {
         try {
-            $stmt = $this->conn->prepare("SHOW TABLES LIKE ?");
-            $tableInDB = $stmt->execute($table);
-
-            if ($tableInDB->rowCount() > 0) {
+            $stmt = $this->conn->query("SHOW TABLES LIKE '$table'");
+            if ($stmt->rowCount() > 0) {
                 return true;
             } else {
-                $this->errors[] = "$table is not exists in this database";
+                $this->errors[] = "Table " . $table . " does not exists in this database";
                 return false;
             }
         } catch (Exception $e) {
-            $this->errors[] = 'Error in Finding table in database ' . $e->getMessage();
+            $this->errors[] = 'Error in finding table is this databsae ' .  $e->getMessage();
             return false;
         }
     }
 
 
     /**
-     * Function for user LoggedIn
+     * Function for return errors
      */
     public function attempt($table, $email, $password, $redirect)
     {
-        try {
+        if (!$this->tableExists($table)) return false;
 
-            if (!$this->tableExists($table)) return false;
+        try {
 
             $stmt = $this->conn->prepare("SELECT * FROM $table WHERE user_email = :email");
             $stmt->bindParam(':email', $email);
@@ -69,36 +67,36 @@ class Auth
             $user = $stmt->fetch();
 
             if (!$user) {
-                $this->errors[] = 'Invalid User Email';
+                $this->errors[] = "Invalid user email";
                 return false;
             }
+
             if (!password_verify($password, $user['user_password'])) {
-                $this->errors[] = 'Invalid User Password';
+                $this->errors[] = 'Invalid user Password';
                 return false;
             }
 
-            // Store user data into the session variable
-            $_SESSION['loggedIn'] = true;
+            // store user data into session variable
+            $_SESSION['status']   = true;
             $_SESSION['userId']   = $user['id'];
-            $_SESSION['Fullname'] = $user['user_fullname'];
-            $_SESSION['Email'] = $user['user_email'];
+            $_SESSION['fullname'] = $user['user_fullname'];
+            $_SESSION['email']    = $user['user_email'];
 
-            // Redirected to inserted location
+            // Redirect to inserted location
             header('Location: ' . $redirect);
             exit;
         } catch (Exception $e) {
-            $this->errors[] = "Error in attempt to user login " . $e->getMessage();
+            $this->errors[] = 'Error in attempt to login ' . $e->getMessage();
             return false;
         }
     }
 
     /**
-     * Function for user logout
+     * Function for User Logout
      */
     public function logout($redirect)
     {
         try {
-
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
@@ -106,46 +104,42 @@ class Auth
             session_unset();
 
             if (session_destroy()) {
+                // Redirect to inserted location
                 header('Location: ' . $redirect);
                 exit;
             }
         } catch (Exception $e) {
-            $this->errors[] = "Error in user logout " . $e->getMessage();
+            $this->errors[] = 'Error in attempt to login ' . $e->getMessage();
             return false;
         }
     }
 
     /**
-     * Function for check user is LoggedIn
+     * Function for check user is login or not
      */
     public function checkUser($redirect)
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (!isset($_SESSION['loggedIn']) || $_SESSION['loggedIn'] !== true) {
+        if ($_SESSION['status'] === false) {
+            $this->errors[] = 'Please login your account first';
             header('Location: ' . $redirect);
             exit;
         }
     }
 
-
     /**
-     * Function for check user is Already loggedIn
+     * Function for Check loggedIn user
      */
-    public function loggedIn($redirect)
+    public function LoggedIn($redirect)
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if ($_SESSION['loggedIn'] === true) {
+        if ($_SESSION['status'] === true) {
             header('Location: ' . $redirect);
             exit;
         }
     }
 
+
     /**
-     * Function for get errors
+     * Function for return errors
      */
     public function getErrors()
     {
@@ -153,8 +147,9 @@ class Auth
     }
 
 
+
     /**
-     * Function for get result
+     * Function for return result
      */
     public function getResult()
     {
@@ -163,10 +158,10 @@ class Auth
 
 
     /**
-     * Function for close connection 
+     * Function for close connection to Database
      */
     public function __destruct()
     {
         $this->conn = null;
     }
-}
+} // class ends here
