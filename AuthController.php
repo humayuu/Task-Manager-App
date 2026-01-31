@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Class for Database connection & Authentication
  */
