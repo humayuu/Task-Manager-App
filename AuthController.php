@@ -37,7 +37,8 @@ class Auth
     protected function tableExists($table)
     {
         try {
-            $stmt = $this->conn->query("SHOW TABLES LIKE '$table'");
+            $stmt = $this->conn->prepare("SHOW TABLES LIKE ?");
+            $stmt->execute([$table]);
             if ($stmt->rowCount() > 0) {
                 return true;
             } else {
@@ -73,6 +74,10 @@ class Auth
             if (!password_verify($password, $user['user_password'])) {
                 $this->errors[] = 'Invalid user Password';
                 return false;
+            }
+
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
             }
 
             // store user data into session variable
@@ -152,6 +157,26 @@ class Auth
     {
         $this->errors[] = "$message " . $e->getMessage();
         return false;
+    }
+
+    /**
+     * Function for fields validation
+     */
+    public function validate($fields = [])
+    {
+        if (empty($fields)) {
+            $this->errors[] = 'All fields are required';
+            return false;
+        }
+
+        foreach ($fields as $field) {
+            if (empty($field)) {
+                $this->errors[] = 'All fields are required';
+                return false;
+            }
+        }
+
+        return true;
     }
 
 

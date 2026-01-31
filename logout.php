@@ -3,4 +3,4 @@ require './config.php';
 
 $redirect = './index.php';
 
-$auth->logout($redirect);
+$database->logout($redirect);

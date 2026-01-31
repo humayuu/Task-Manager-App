@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issSubmitted'])) {
     $password  = $_POST['password'];
     $redirect = './dashboard.php';
 
-    $auth->attempt($table, $email, $password, $redirect);
+    $database->attempt($table, $email, $password, $redirect);
 }
 
 ?>
@@ -50,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issSubmitted'])) {
                         <div class="row no-gutters">
                             <div class="col-xl-12">
                                 <?php
-                                if ($auth->getErrors()) {
-                                    foreach ($auth->getErrors() as $error) {
+                                if ($database->getErrors()) {
+                                    foreach ($database->getErrors() as $error) {
                                         echo "<div class='alert alert-danger'>$error</div>";
                                     }
                                 }

@@ -45,11 +45,10 @@ class TaskController extends Auth
         $this->conn->beginTransaction();
         try {
             $columns = implode(', ', array_keys($params));
-            $placeHolders = implode(', ', array_keys($params));
-            $values = implode(', ', $params);
+            $placeHolders = ':' . implode(', :', array_keys($params));
 
             $stmt = $this->conn->prepare("INSERT INTO $table ($columns) VALUES ($placeHolders)");
-            $result =  $stmt->execute([$values]);
+            $result = $stmt->execute($params);
 
             if ($result) {
                 $this->conn->commit();
@@ -113,7 +112,7 @@ class TaskController extends Auth
             if ($where !== null) $sql .= " WHERE $where";
 
             $stmt = $this->conn->prepare($sql);
-            $result = $stmt->execute();
+            $result = $stmt->execute($params);
 
             if ($result) {
                 $this->conn->commit();

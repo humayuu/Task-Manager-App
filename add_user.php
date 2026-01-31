@@ -1,4 +1,74 @@
-<?php require './header.php'; ?>
+<?php
+session_start();
+require './config.php';
+
+
+// Generate CSRF Token
+if (empty($_SESSION['__csrf'])) {
+    $_SESSION['__csrf'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issSubmitted'])) {
+    // Verify CSRF Token
+    if (!hash_equals($_SESSION['__csrf'], $_POST['__csrf'])) {
+        $database->errors[] = "Invalid CSRF Token";
+        header('Location: ' . basename(__FILE__));
+        exit;
+    }
+
+    $table = 'users_tbl';
+    $redirect = './all_user.php';
+    $fullName = htmlspecialchars($_POST['fullname']);
+    $email = htmlspecialchars($_POST['email']);
+    $password = $_POST['password'];
+    $confirmPassword = $_POST['confirmPassword'];
+    $userRole = htmlspecialchars($_POST['userRole']);
+    $status = htmlspecialchars($_POST['status']);
+    $file = $_FILES['profileImage'];
+    $uploadDir = '/uploads/profile_image/';
+
+    $userValidate = [
+        'user_fullname' => $fullName,
+        'user_email' => $email,
+        'user_password' => $password,
+        'user_role' => $password,
+        'user_status' => $userRole,
+    ];
+
+    if (strlen($password)  < 8) {
+        $database->errors[] = "Password must be in 8 characters";
+        return false;
+    }
+
+    if ($password !== $confirmPassword) {
+        $database->errors[] = "Password and Confirm password must be matched";
+        return false;
+    }
+
+    // Create hashPassword
+    $hashPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // Image Upload
+    if (isset($_FILES['profileImage'])) {
+        $image = $database->file($table, $file, $uploadDir);
+    } else {
+        $image = null;
+    }
+
+    $params = [
+        'user_fullname' => $fullName,
+        'user_email' => $email,
+        'user_password' => $hashPassword,
+        'user_role' => $userRole,
+        'user_status' => $status,
+        'profile_image' => $image
+    ];
+
+    $database->store($table, $params, $redirect);
+}
+
+require './header.php';
+?>
 
 <!--**********************************
     Content body start
@@ -22,8 +92,19 @@
                         </h4>
                     </div>
                     <div class="card-body p-4">
+                        <?php
+                        if ($database->getErrors()) {
+                            foreach ($database->getErrors() as $error) {
+                                echo "<div class='alert alert-danger'>$error</div>";
+                            }
+                        }
+
+
+                        ?>
                         <div class="basic-form">
-                            <form method="POST" action="">
+                            <form method="post" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>"
+                                enctype="multipart/form-data">
+                                <input type="hidden" name="__csrf" value="<?= htmlspecialchars($_SESSION['__csrf']) ?>">
 
                                 <!-- Personal Information -->
                                 <div class="mb-4 pb-3 border-bottom">
@@ -36,14 +117,14 @@
                                                 Full Name <span class="text-danger">*</span>
                                             </label>
                                             <input type="text" class="form-control form-control-lg" id="fullname"
-                                                name="fullname" placeholder="Enter full name" required>
+                                                name="fullname" placeholder="Enter full name">
                                         </div>
                                         <div class="form-group col-md-6">
                                             <label for="email" class="font-weight-bold">
                                                 Email Address <span class="text-danger">*</span>
                                             </label>
                                             <input type="email" class="form-control form-control-lg" id="email"
-                                                name="email" placeholder="Enter email address" required>
+                                                name="email" placeholder="Enter email address">
                                         </div>
                                     </div>
                                 </div>
@@ -59,7 +140,7 @@
                                                 Password <span class="text-danger">*</span>
                                             </label>
                                             <input type="password" class="form-control form-control-lg" id="password"
-                                                name="password" placeholder="Enter password" required minlength="8">
+                                                name="password" placeholder="Enter password" minlength="8">
                                             <small class="form-text text-muted">
                                                 <i class="fa fa-info-circle"></i> Minimum 8 characters required
                                             </small>
@@ -70,7 +151,7 @@
                                             </label>
                                             <input type="password" class="form-control form-control-lg"
                                                 id="confirmPassword" name="confirmPassword"
-                                                placeholder="Confirm password" required>
+                                                placeholder="Confirm password">
                                         </div>
                                     </div>
                                 </div>
@@ -86,7 +167,7 @@
                                                 User Role <span class="text-danger">*</span>
                                             </label>
                                             <select id="userRole" name="userRole"
-                                                class="form-control form-control-lg default-select" required>
+                                                class="form-control form-control-lg default-select">
                                                 <option value="" selected disabled>Select a role...</option>
                                                 <option value="admin">Admin</option>
                                                 <option value="manager">Manager</option>
@@ -98,11 +179,20 @@
                                                 Account Status <span class="text-danger">*</span>
                                             </label>
                                             <select id="status" name="status"
-                                                class="form-control form-control-lg default-select" required>
+                                                class="form-control form-control-lg default-select">
                                                 <option value="" selected disabled>Select status...</option>
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
                                             </select>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label for="confirmPassword" class="font-weight-bold">
+                                                Profile Image <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="custom-file">
+                                                <input type="file" name="profileImage" class="custom-file-input">
+                                                <label class="custom-file-label">Choose file</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -110,13 +200,13 @@
                                 <!-- Action Buttons -->
                                 <div class="form-row mt-5">
                                     <div class="form-group col-md-12 text-center text-md-left">
-                                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                                        <button type="submit" name="issSubmitted" class="btn btn-primary btn-lg px-5">
                                             <i class="fa fa-check mr-2"></i>Add User
                                         </button>
                                         <button type="reset" class="btn btn-outline-secondary btn-lg px-4 ml-2">
                                             <i class="fa fa-undo mr-2"></i>Reset
                                         </button>
-                                        <a href="users.php" class="btn btn-outline-danger btn-lg px-4 ml-2">
+                                        <a href="all_user.php" class="btn btn-outline-danger btn-lg px-4 ml-2">
                                             <i class="fa fa-times mr-2"></i>Cancel
                                         </a>
                                     </div>

@@ -1,4 +1,4 @@
 <?php
-require './AuthController.php';
+require './TaskController.php';
 
-$auth = new Auth('localhost', 'task_manager_db', 'root', '');
+$database = new TaskController('localhost', 'task_manager_db', 'root', '');
