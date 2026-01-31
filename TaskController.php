@@ -203,8 +203,67 @@ class TaskController extends Auth
         }
     }
 
+
+    /**
+     * Function for Calculate offset for pagination
+     */
+    public function CalculateOffset($limit)
+    {
+        if ($_GET['page']) {
+            $pageNo = $_GET['page'];
+
+            $offset = ($pageNo - 1) * $limit;
+            return $offset;
+        } else {
+            $pageNo = 1;
+        }
+    }
+
     /**
      * Function for pagination
      */
-    public function paginate() {}
+    public function paginate($table, $pageNo, $limit)
+    {
+        if (!$this->tableExists($table)) return false;
+
+        if (empty($pageNo)) {
+            $this->errors[] = "Page no is required";
+            return false;
+        }
+
+        try {
+
+            $stmt = $this->conn->prepare("SELECT COUNT(*) AS total FROM $table");
+            $stmt->execute();
+            $totalRows = $stmt->fetch()['total'];
+            $totalPages = ceil($totalRows / $limit);
+
+            if ($totalRows > 5) {
+                echo '<nav aria-label="Page navigation example">
+                <ul class="pagination">';
+
+                if ($totalPages > 5) {
+                    echo '<li class="page-item"><a class="page-link" href="?page=' . ($pageNo - 1) . '">Previous</a></li>';
+                } else {
+                    echo '   <li class="page-item"><a class="page-link" disabled>Previous</a></li>';
+                }
+
+                for ($i = 1; $i <= $totalPages; $i++) {
+                    $activeClass = ($i == $pageNo) ? 'active' : '';
+                    echo "<li class='page-item'><a class='page-link " . $activeClass . "' href='?page=" . $i . "'>$i</a></li>";
+                }
+
+                if ($totalRows === $totalPages) {
+                    echo '<li class="page-item"><a class="page-link" href="?page=' . ($pageNo + 1) . '">Next</a></li>';
+                } else {
+                    echo '   <li class="page-item"><a class="page-link" disabled>Previous</a></li>';
+                }
+
+                echo '  </ul>
+                </nav>';
+            }
+        } catch (Exception $e) {
+            $this->error('Error in show Pagination ', $e);
+        }
+    }
 }

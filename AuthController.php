@@ -145,6 +145,15 @@ class Auth
         return $this->errors;
     }
 
+    /**
+     * Function for Show Error & stop the execution for code
+     */
+    public function error($message,  $e)
+    {
+        $this->errors[] = "$message " . $e->getMessage();
+        return false;
+    }
+
 
 
     /**
